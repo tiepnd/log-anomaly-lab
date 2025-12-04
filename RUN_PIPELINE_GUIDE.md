@@ -4,10 +4,22 @@
 
 Tài liệu này hướng dẫn chi tiết cách chạy toàn bộ pipeline từ preprocessing đến evaluation và cập nhật báo cáo.
 
+**Hỗ trợ**: Windows, Linux, macOS
+
 ## GIAI ĐOẠN 1: Chuẩn Bị Môi Trường
 
 ### Bước 1.1: Kiểm tra môi trường
 
+**Windows (PowerShell hoặc CMD):**
+```powershell
+cd code
+.\venv\Scripts\Activate.ps1    # PowerShell
+# hoặc
+.\venv\Scripts\activate.bat    # CMD
+python --version  # Cần >= 3.8
+```
+
+**Linux/Mac:**
 ```bash
 cd code
 source venv/bin/activate
@@ -16,14 +28,16 @@ python3 --version  # Cần >= 3.8
 
 ### Bước 1.2: Cài đặt dependencies
 
+**Windows/Linux/Mac:**
 ```bash
 pip install -r requirements.txt
 ```
 
 ### Bước 1.3: Kiểm tra GPU
 
+**Windows/Linux/Mac:**
 ```bash
-python3 -c "import torch; print(f'CUDA: {torch.cuda.is_available()}'); print(f'GPU count: {torch.cuda.device_count()}')"
+python -c "import torch; print(f'CUDA: {torch.cuda.is_available()}'); print(f'GPU count: {torch.cuda.device_count()}')"
 ```
 
 Nếu chưa có PyTorch với CUDA, cài đặt:
@@ -31,8 +45,25 @@ Nếu chưa có PyTorch với CUDA, cài đặt:
 pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
 ```
 
+**Lưu ý Windows**: Nếu gặp lỗi khi import torch, có thể cần cài đặt Visual C++ Redistributable.
+
 ### Bước 1.4: Kiểm tra datasets
 
+**Windows (PowerShell):**
+```powershell
+Get-ChildItem datasets\HDFS_v1\HDFS.log    # ~1.5GB
+Get-ChildItem datasets\BGL.log              # ~709MB
+Get-ChildItem datasets\HDFS_v1\preprocessed\anomaly_label.csv
+```
+
+**Windows (CMD):**
+```cmd
+dir datasets\HDFS_v1\HDFS.log
+dir datasets\BGL.log
+dir datasets\HDFS_v1\preprocessed\anomaly_label.csv
+```
+
+**Linux/Mac:**
 ```bash
 ls -lh datasets/HDFS_v1/HDFS.log  # ~1.5GB
 ls -lh datasets/BGL.log            # ~709MB
@@ -43,24 +74,44 @@ ls -lh datasets/HDFS_v1/preprocessed/anomaly_label.csv
 
 ### Cách 1: Chạy từng bước (khuyến nghị cho lần đầu)
 
+**Windows/Linux/Mac:**
 ```bash
 cd preprocessing
 
 # Parse HDFS
-python3 scripts/test_preprocessing.py --parse_full --dataset HDFS
+python scripts/test_preprocessing.py --parse_full --dataset HDFS
 
 # Parse BGL
-python3 scripts/test_preprocessing.py --parse_full --dataset BGL
+python scripts/test_preprocessing.py --parse_full --dataset BGL
 
-# Tokenization & Embedding cho HDFS
-python3 scripts/test_preprocessing.py --section tokenization_embedding --dataset HDFS --parse_full
+# Tokenization & Embedding cho HDFS (Word2Vec)
+python scripts/process_full_dataset.py --dataset HDFS --embedding_method word2vec
 
-# Tokenization & Embedding cho BGL
-python3 scripts/test_preprocessing.py --section tokenization_embedding --dataset BGL --parse_full
+# Tokenization & Embedding cho HDFS (BERT)
+python scripts/process_full_dataset.py --dataset HDFS --embedding_method bert
+
+# Tokenization & Embedding cho BGL (Word2Vec)
+python scripts/process_full_dataset.py --dataset BGL --embedding_method word2vec
+
+# Tokenization & Embedding cho BGL (BERT)
+python scripts/process_full_dataset.py --dataset BGL --embedding_method bert
 ```
 
 ### Cách 2: Chạy script tự động
 
+**Windows (PowerShell):**
+```powershell
+cd code
+.\run_full_pipeline.ps1
+```
+
+**Windows (CMD):**
+```cmd
+cd code
+run_full_pipeline.bat
+```
+
+**Linux/Mac:**
 ```bash
 cd code
 ./run_full_pipeline.sh
@@ -80,24 +131,26 @@ cd code
 
 ### Train Autoencoder
 
+**Windows/Linux/Mac:**
 ```bash
 cd training
 
 # HDFS
-python3 scripts/train.py --model autoencoder --dataset HDFS --epochs 50 --batch_size 32 --device cuda
+python scripts/train.py --model autoencoder --dataset HDFS --epochs 50 --batch_size 32 --device cuda
 
 # BGL
-python3 scripts/train.py --model autoencoder --dataset BGL --epochs 50 --batch_size 32 --device cuda
+python scripts/train.py --model autoencoder --dataset BGL --epochs 50 --batch_size 32 --device cuda
 ```
 
 ### Train LogBERT
 
+**Windows/Linux/Mac:**
 ```bash
 # HDFS
-python3 scripts/train.py --model logbert --dataset HDFS --epochs 10 --batch_size 16 --device cuda
+python scripts/train.py --model logbert --dataset HDFS --epochs 10 --batch_size 16 --device cuda
 
 # BGL
-python3 scripts/train.py --model logbert --dataset BGL --epochs 10 --batch_size 16 --device cuda
+python scripts/train.py --model logbert --dataset BGL --epochs 10 --batch_size 16 --device cuda
 ```
 
 **Lưu ý**: Nếu gặp Out of Memory, giảm batch_size:
@@ -114,20 +167,21 @@ python3 scripts/train.py --model logbert --dataset BGL --epochs 10 --batch_size 
 
 ## GIAI ĐOẠN 4: Hyperparameter Tuning
 
+**Windows/Linux/Mac:**
 ```bash
 cd training
 
 # Autoencoder
-python3 scripts/tune.py --model autoencoder --dataset HDFS --epochs 10
-python3 scripts/tune.py --model autoencoder --dataset BGL --epochs 10
+python scripts/tune.py --model autoencoder --dataset HDFS --epochs 10
+python scripts/tune.py --model autoencoder --dataset BGL --epochs 10
 
 # LogBERT
-python3 scripts/tune.py --model logbert --dataset HDFS --epochs 5
-python3 scripts/tune.py --model logbert --dataset BGL --epochs 5
+python scripts/tune.py --model logbert --dataset HDFS --epochs 5
+python scripts/tune.py --model logbert --dataset BGL --epochs 5
 
 # Visualize
-python3 scripts/plot_tuning.py --model autoencoder --dataset both
-python3 scripts/plot_tuning.py --model logbert --dataset both
+python scripts/plot_tuning.py --model autoencoder --dataset both
+python scripts/plot_tuning.py --model logbert --dataset both
 ```
 
 **Thời gian dự kiến**: 12-24 giờ
@@ -139,13 +193,14 @@ python3 scripts/plot_tuning.py --model logbert --dataset both
 
 ## GIAI ĐOẠN 5: Threshold Selection
 
+**Windows/Linux/Mac:**
 ```bash
 cd training
 
-python3 scripts/threshold.py --model_type autoencoder --dataset HDFS
-python3 scripts/threshold.py --model_type autoencoder --dataset BGL
-python3 scripts/threshold.py --model_type logbert --dataset HDFS
-python3 scripts/threshold.py --model_type logbert --dataset BGL
+python scripts/threshold.py --model_type autoencoder --dataset HDFS
+python scripts/threshold.py --model_type autoencoder --dataset BGL
+python scripts/threshold.py --model_type logbert --dataset HDFS
+python scripts/threshold.py --model_type logbert --dataset BGL
 ```
 
 **Thời gian dự kiến**: 1-2 giờ
@@ -157,17 +212,18 @@ python3 scripts/threshold.py --model_type logbert --dataset BGL
 
 ## GIAI ĐOẠN 6: Evaluation
 
+**Windows/Linux/Mac:**
 ```bash
 cd evaluation
 
 # Evaluate all models
-python3 scripts/evaluate.py --model_type autoencoder --dataset HDFS
-python3 scripts/evaluate.py --model_type autoencoder --dataset BGL
-python3 scripts/evaluate.py --model_type logbert --dataset HDFS
-python3 scripts/evaluate.py --model_type logbert --dataset BGL
+python scripts/evaluate.py --model_type autoencoder --dataset HDFS
+python scripts/evaluate.py --model_type autoencoder --dataset BGL
+python scripts/evaluate.py --model_type logbert --dataset HDFS
+python scripts/evaluate.py --model_type logbert --dataset BGL
 
 # Generate all plots
-python3 scripts/plot.py --plot_type all --model_type both --dataset both
+python scripts/plot.py --plot_type all --model_type both --dataset both
 ```
 
 **Thời gian dự kiến**: 2-4 giờ
@@ -179,9 +235,10 @@ python3 scripts/plot.py --plot_type all --model_type both --dataset both
 
 ## GIAI ĐOẠN 7: Thu Thập Kết Quả
 
+**Windows/Linux/Mac:**
 ```bash
 cd code
-python3 collect_results.py
+python collect_results.py
 ```
 
 **Output**:
@@ -192,9 +249,10 @@ python3 collect_results.py
 
 ## GIAI ĐOẠN 8: Cập Nhật Báo Cáo
 
+**Windows/Linux/Mac:**
 ```bash
 cd code
-python3 update_chapter2.py
+python update_chapter2.py
 ```
 
 **Output**: `chapter2_updates.md` - Nội dung đã format sẵn để copy vào Chương 2
@@ -203,6 +261,19 @@ python3 update_chapter2.py
 
 ### Chạy tất cả
 
+**Windows (PowerShell):**
+```powershell
+cd code
+.\run_full_pipeline.ps1
+```
+
+**Windows (CMD):**
+```cmd
+cd code
+run_full_pipeline.bat
+```
+
+**Linux/Mac:**
 ```bash
 cd code
 ./run_full_pipeline.sh
@@ -210,6 +281,19 @@ cd code
 
 ### Chạy từng phần
 
+**Windows (PowerShell):**
+```powershell
+# Chỉ preprocessing
+.\run_full_pipeline.ps1 -SkipTraining -SkipTuning -SkipEvaluation
+
+# Chỉ training (đã có preprocessing)
+.\run_full_pipeline.ps1 -SkipPreprocessing -SkipTuning -SkipEvaluation
+
+# Chỉ tuning (đã có training)
+.\run_full_pipeline.ps1 -SkipPreprocessing -SkipTraining -SkipEvaluation
+```
+
+**Linux/Mac:**
 ```bash
 # Chỉ preprocessing
 ./run_full_pipeline.sh --skip-training --skip-tuning --skip-evaluation
@@ -225,12 +309,34 @@ cd code
 
 ### Monitor GPU
 
+**Windows/Linux/Mac:**
+```bash
+nvidia-smi
+```
+
+**Linux/Mac (auto-refresh):**
 ```bash
 watch -n 1 nvidia-smi
 ```
 
+**Windows (PowerShell - auto-refresh):**
+```powershell
+while ($true) { Clear-Host; nvidia-smi; Start-Sleep -Seconds 1 }
+```
+
 ### Monitor Disk Space
 
+**Windows (PowerShell):**
+```powershell
+Get-PSDrive -PSProvider FileSystem | Select-Object Name, @{Name="Used(GB)";Expression={[math]::Round($_.Used/1GB,2)}}, @{Name="Free(GB)";Expression={[math]::Round($_.Free/1GB,2)}}
+```
+
+**Windows (CMD):**
+```cmd
+wmic logicaldisk get name,freespace,size
+```
+
+**Linux/Mac:**
 ```bash
 df -h
 ```
@@ -250,8 +356,15 @@ Tất cả scripts đều có logging. Check console output hoặc log files.
 ### Training bị gián đoạn
 
 Resume từ checkpoint:
+
+**Windows/Linux/Mac:**
 ```bash
-python3 scripts/train.py --model autoencoder --dataset HDFS --resume path/to/checkpoint.pt
+python scripts/train.py --model autoencoder --dataset HDFS --resume path/to/checkpoint.pt
+```
+
+**Lưu ý Windows**: Đường dẫn có thể dùng backslash hoặc forward slash:
+```bash
+python scripts/train.py --model autoencoder --dataset HDFS --resume "training\output\checkpoints\autoencoder_hdfs\best_model.pt"
 ```
 
 ### File Not Found
@@ -260,6 +373,19 @@ Kiểm tra paths trong scripts. Đảm bảo đã chạy các bước trước �
 
 ## Backup Kết Quả
 
+**Windows (PowerShell):**
+```powershell
+# Backup checkpoints
+Compress-Archive -Path training\output\checkpoints\ -DestinationPath checkpoints_backup.zip
+
+# Backup evaluation results
+Compress-Archive -Path evaluation\output\ -DestinationPath evaluation_backup.zip
+
+# Backup all results
+Compress-Archive -Path results_summary\ -DestinationPath results_backup.zip
+```
+
+**Linux/Mac:**
 ```bash
 # Backup checkpoints
 tar -czf checkpoints_backup.tar.gz training/output/checkpoints/
@@ -281,4 +407,51 @@ tar -czf results_backup.tar.gz results_summary/
 - **Tổng cộng**: 25-50 giờ
 
 *Lưu ý: Có thể chạy song song một số bước (ví dụ: train HDFS và BGL song song nếu có nhiều GPU)*
+
+---
+
+## Lưu Ý Đặc Biệt Cho Windows
+
+### 1. Virtual Environment
+
+**PowerShell:**
+- Nếu gặp lỗi "execution of scripts is disabled", chạy:
+```powershell
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+```
+
+**CMD:**
+- Sử dụng `activate.bat` thay vì `Activate.ps1`
+
+### 2. Đường Dẫn
+
+- Windows hỗ trợ cả forward slash (`/`) và backslash (`\`) trong Python
+- Khi dùng trong bash scripts, dùng forward slash
+- Khi dùng trong PowerShell/CMD, có thể dùng cả hai
+
+### 3. Python Command
+
+- Trên Windows, thường dùng `python` thay vì `python3`
+- Nếu có cả Python 2 và 3, dùng `py -3` hoặc `python3` nếu đã cài đặt
+
+### 4. GPU Support
+
+- Đảm bảo đã cài NVIDIA drivers
+- Cài đặt CUDA toolkit từ NVIDIA website
+- Cài PyTorch với CUDA support:
+```bash
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+```
+
+### 5. Long Path Support (Windows 10+)
+
+Nếu gặp lỗi "path too long", enable long path support:
+```powershell
+# Chạy PowerShell as Administrator
+New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem" -Name "LongPathsEnabled" -Value 1 -PropertyType DWORD -Force
+```
+
+### 6. Scripts Tự Động
+
+Nếu không có `run_full_pipeline.ps1` hoặc `run_full_pipeline.bat`, có thể chạy từng bước thủ công theo hướng dẫn ở trên.
 

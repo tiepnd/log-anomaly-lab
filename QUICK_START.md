@@ -21,6 +21,17 @@ python3 -c "import torch; print(f'CUDA: {torch.cuda.is_available()}')"
 
 ### Cách 1: Chạy tự động (Khuyến nghị)
 
+**Windows (PowerShell):**
+```powershell
+.\run_full_pipeline.ps1
+```
+
+**Windows (CMD):**
+```cmd
+run_full_pipeline.bat
+```
+
+**Linux/Mac:**
 ```bash
 ./run_full_pipeline.sh
 ```
@@ -38,8 +49,9 @@ Xem chi tiết trong `RUN_PIPELINE_GUIDE.md`
 
 ## Bước 3: Thu Thập Kết Quả (5 phút)
 
+**Windows/Linux/Mac:**
 ```bash
-python3 collect_results.py
+python collect_results.py
 ```
 
 Output: `results_summary/` folder với:
@@ -49,15 +61,16 @@ Output: `results_summary/` folder với:
 
 ## Bước 4: Cập Nhật Báo Cáo (10 phút)
 
+**Windows/Linux/Mac:**
 ```bash
-python3 update_chapter2.py
+python update_chapter2.py
 ```
 
 Output: `chapter2_updates.md` - Nội dung đã format sẵn để copy vào Chương 2
 
 ## Files Quan Trọng
 
-- `run_full_pipeline.sh`: Script chạy toàn bộ pipeline
+- `run_full_pipeline.sh` / `run_full_pipeline.ps1` / `run_full_pipeline.bat`: Script chạy toàn bộ pipeline
 - `collect_results.py`: Thu thập và tổng hợp kết quả
 - `update_chapter2.py`: Tạo nội dung cập nhật Chương 2
 - `RUN_PIPELINE_GUIDE.md`: Hướng dẫn chi tiết từng bước
@@ -67,7 +80,10 @@ Output: `chapter2_updates.md` - Nội dung đã format sẵn để copy vào Ch�
 1. **Thời gian**: Pipeline mất 25-50 giờ, có thể chạy qua đêm
 2. **GPU**: Cần GPU NVIDIA với 8GB+ VRAM cho LogBERT
 3. **Disk Space**: Cần ~10-20GB cho checkpoints và outputs
-4. **Monitoring**: Dùng `watch -n 1 nvidia-smi` để monitor GPU
+4. **Monitoring**: 
+   - Windows/Linux/Mac: `nvidia-smi`
+   - Linux/Mac (auto-refresh): `watch -n 1 nvidia-smi`
+   - Windows PowerShell (auto-refresh): `while ($true) { Clear-Host; nvidia-smi; Start-Sleep -Seconds 1 }`
 
 ## Troubleshooting
 
